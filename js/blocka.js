@@ -49,41 +49,42 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==============================
     //  FUNCIONES DEL JUEGO
     // ==============================
+function startGame(level) {
+    const config = LEVELS.find(l => l.level === level);
+    if (!config) {
+        winGame();
+        return;
+    }
 
-    async function startGame(level) {
-        const config = LEVELS.find(l => l.level === level);
-        if (!config) {
-            winGame();
-            return;
-        }
+    isGameActive = true;
+    gameControls.classList.add('hidden');
+    postGameOptions.style.display = 'none';
+    canvas.style.display = 'block';
+    ingameUIOverlay.style.display = 'block';
+    gameScreen.classList.add('game-active-bg');
+    loadImageAndStart(config);
+}
 
-        isGameActive = true;
-        gameControls.classList.add('hidden');
-        postGameOptions.style.display = 'none';
-        canvas.style.display = 'block';
-        ingameUIOverlay.style.display = 'block';
-        gameScreen.classList.add('game-active-bg');
+   function loadImageAndStart(config) {
+    const randomIndex = Math.floor(Math.random() * IMAGE_BANK.length);
+    const imageUrl = IMAGE_BANK[randomIndex];
 
-        await loadImage();
+    const img = new Image();
+    img.crossOrigin = "Anonymous"; 
+    img.onload = () => {
+        image = img; 
         preparePieces();
         draw(config.filter);
         startTimer();
-    }
+    };
 
-    async function loadImage() {
-        const randomIndex = Math.floor(Math.random() * IMAGE_BANK.length);
-        const imageUrl = IMAGE_BANK[randomIndex];
-        
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-                image = img;
-                resolve();
-            };
-            img.onerror = () => reject(new Error(`No se pudo cargar: ${imageUrl}`));
-            img.src = imageUrl;
-        });
-    }
+    // Es una buena práctica manejar también los errores de carga
+    img.onerror = () => {
+        console.error(`No se pudo cargar la imagen: ${imageUrl}`);
+        alert("Hubo un error al cargar la imagen del nivel. Por favor, intenta de nuevo.");
+    };
+    img.src = imageUrl;
+}
 
     function draw(filter = null) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
