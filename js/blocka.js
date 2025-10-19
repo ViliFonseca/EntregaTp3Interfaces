@@ -71,16 +71,11 @@ function startGame(level) {
     const imageUrl = IMAGE_BANK[randomIndex];
 
     const img = new Image();
-    img.crossOrigin = "Anonymous"; 
     img.onload = () => {
         image = img; 
         preparePieces();
         draw(config.filter);
         startTimer();
-    };
-    img.onerror = () => {
-        console.error(`No se pudo cargar la imagen: ${imageUrl}`);
-        alert("Hubo un error al cargar la imagen del nivel. Por favor, intenta de nuevo.");
     };
     img.src = imageUrl;
 }
@@ -292,3 +287,4 @@ function startGame(level) {
     });
 
 });
+
