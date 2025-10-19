@@ -27,8 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 🔹 CONFIGURACIÓN DEL JUEGO
     // ==============================
     const IMAGE_BANK = [
-        'img/Blocka/foto4.jpg',
-
+        'img/Blocka/foto1.jpg',
+        'img/Blocka/foto2.jpg',
+        'img/Blocka/foto3.jpg',
+        
     ];
 
     const LEVELS = [
