@@ -78,8 +78,6 @@ function startGame(level) {
         draw(config.filter);
         startTimer();
     };
-
-    // Es una buena práctica manejar también los errores de carga
     img.onerror = () => {
         console.error(`No se pudo cargar la imagen: ${imageUrl}`);
         alert("Hubo un error al cargar la imagen del nivel. Por favor, intenta de nuevo.");
@@ -292,4 +290,5 @@ function startGame(level) {
             instructionsModal.style.display = 'none';
         }
     });
+
 });
