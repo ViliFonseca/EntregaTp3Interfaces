@@ -36,10 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     const LEVELS = [
-        { level: 1, filter:  null, rows: 2, cols: 2, maxTime: 2 }, 
-        { level: 2, filter: 'brightness', rows: 3, cols: 3 , maxTime: 9999999999}, 
-        { level: 3, filter: 'grayscale',  rows: 4, cols: 4, maxTime: 120}, 
-        { level: 4, filter: 'negative',   rows: 5, cols: 5, maxTime: 60}
+        { level: 1, filter:  null, rows: 2, cols: 2, maxTime: 100000 }, 
+         { level: 2, filter:  'brigthness' , rows: 2, cols: 2, maxTime: 100000 }, 
+          { level: 3, filter:  "grayscale", rows: 2, cols: 2, maxTime: 90 }, 
+           { level: 4, filter:  'negative', rows: 2, cols: 2, maxTime: 60 }, 
     ];
 
     let currentLevel = 1;
@@ -76,93 +76,97 @@ document.addEventListener('DOMContentLoaded', () => {
         loadImageAndStart(config);
     }
 
-    function loadImageAndStart(config) {
+   function loadImageAndStart(config) {
         const randomIndex = Math.floor(Math.random() * IMAGE_BANK.length);
         const imageUrl = IMAGE_BANK[randomIndex];
 
         const img = new Image();
         img.onload = () => {
             image = img; 
-            preparePieces();
-            draw(config.filter);
+            preparePieces(img, config.rows, config.cols); 
+            draw();
             startTimer();
         };
         img.src = imageUrl;
     }
 
-   function draw(filter = null) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    pieces.forEach(piece => {
-        ctx.save();
-        ctx.translate(piece.dx + piece.dw / 2, piece.dy + piece.dh / 2);
-        ctx.rotate((piece.rotation * Math.PI) / 180);
-        ctx.drawImage(
-            image,
-            piece.sx, piece.sy, piece.sw, piece.sh,
-            -piece.dw / 2, -piece.dh / 2, piece.dw, piece.dh
-        );
-        ctx.restore();
-    });
-    if (filter && isGameActive) {
-        applyFilter(filter);
-    }
-    pieces.forEach(piece => {
-        if (piece.isLocked) {
-            ctx.strokeStyle = 'gold';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(piece.dx + 2, piece.dy + 2, piece.dw - 4, piece.dh - 4);
+   function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (!isGameActive && image) { 
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            return;
         }
-    });
-}
+
+        pieces.forEach(piece => {
+            ctx.save();
+            ctx.translate(piece.x + piece.width / 2, piece.y + piece.height / 2);
+            ctx.rotate(piece.rotation * Math.PI / 180);
+            ctx.drawImage(
+                image, 
+                piece.sx, piece.sy, piece.sw, piece.sh,
+                -piece.width / 2, -piece.height / 2, piece.width, piece.height
+            );
+
+            ctx.restore();
+            applyFilter(piece.filter, piece);
+        });
+    }
+
    
 
 
 
-function preparePieces() {
-        pieces = [];
-        const config = LEVELS.find(l => l.level === currentLevel);
-        const { rows, cols } = config;
+function preparePieces(img, rows, cols) {
+    const pieceWidth = canvas.width / cols;
+    const pieceHeight = canvas.height / rows;
+    pieces = [];
+    const possibleFilters = ["none", "grayscale", "brightness", "negative"];
 
-        const pieceWidth = canvas.width / cols;
-        const pieceHeight = canvas.height / rows;
-        const sourcePieceWidth = image.width / cols;
-        const sourcePieceHeight = image.height / rows;
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const rotation = [0, 90, 180, 270][Math.floor(Math.random() * 4)];
+            const x = col * pieceWidth;
+            const y = row * pieceHeight;
 
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-                const rotation = [90, 180, 270][Math.floor(Math.random() * 3)];
-                
-                pieces.push({
-                    sx: col * sourcePieceWidth,
-                    sy: row * sourcePieceHeight,
-                    sw: sourcePieceWidth,
-                    sh: sourcePieceHeight,
-                    dx: col * pieceWidth,
-                    dy: row * pieceHeight,
-                    dw: pieceWidth,
-                    dh: pieceHeight,
-                    rotation,
-                    isLocked: false
-                    });
+            // asignar filtro
+            let filter = "none";
+            if (currentLevel >= 4) {
+                filter = possibleFilters[Math.floor(Math.random() * possibleFilters.length)];
+            } else {
+                const levelConfig = LEVELS.find(l => l.level === currentLevel);
+                filter = levelConfig.filter || "none";
             }
+
+            pieces.push({
+                x: x,
+                y: y,
+                width: pieceWidth,
+                height: pieceHeight,
+                sx: col * (img.width / cols),
+                sy: row * (img.height / rows),
+                sw: img.width / cols,
+                sh: img.height / rows,
+                rotation: rotation,
+                filter: filter
+            });
         }
     }
+}
 
-    function rotatePiece(x, y, direction) {
-        if (!isGameActive) return;
+  function rotatePiece(x, y, direction) {
+    if (!isGameActive) return;
+    const piece = pieces.find(p => 
+        x >= p.x && x < p.x + p.width &&
+        y >= p.y && y < p.y + p.height
+    );
 
-        const piece = pieces.find(p => 
-            x >= p.dx && x < p.dx + p.dw &&
-            y >= p.dy && y < p.dy + p.dh
-        );
-
-        if (!piece ||piece.isLocked) return;
-
-        const config = LEVELS.find(l => l.level === currentLevel);
-        piece.rotation = (piece.rotation + direction + 360) % 360;
-        draw(config.filter);
-        checkWin();
-    }
+    if (!piece || piece.isLocked) return;
+    piece.rotation = (piece.rotation + direction + 360) % 360;
+    
+    draw(); 
+    
+    checkWin();
+}
 
     function checkWin() {
        const allCorrect = pieces.every(p => p.rotation === 0);
@@ -174,7 +178,7 @@ function preparePieces() {
             helpButton.style.display = 'none';
             pieces.forEach(p => p.isLocked = false); // Limpia foto al final
             draw();
-            
+                        
             setTimeout(() => {
                gameMessage.textContent = `¡Nivel ${currentLevel} Superado!`;
                 gameSubmessage.textContent = `Tu tiempo: ${timerDisplay.textContent}`;
@@ -184,6 +188,8 @@ function preparePieces() {
                 postGameOptions.style.flexDirection = 'column';
                 currentLevel++;
                 if (currentLevel > LEVELS.length) {
+                    gameMessage.textContent = `¡HAS COMPLETADO BLOCKA!`;
+                       gameSubmessage.textContent = 'MUCHAS GRACIAS POR JUGAR.';
                     nextLevelButton.textContent = "Jugar de Nuevo";
                 } else {
                         nextLevelButton.textContent = `Siguiente Nivel (${currentLevel})`;
@@ -224,37 +230,38 @@ function preparePieces() {
 
     //    FILTROS
     // ============
-    function applyFilter(filterName) {
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
+    function applyFilter(filterType, piece) {
+    if (filterType === "none") return;
+    const imageData = ctx.getImageData(piece.x, piece.y, piece.width, piece.height);
+    const data = imageData.data;
 
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
+    switch (filterType) {
+        case "grayscale":
+            for (let i = 0; i < data.length; i += 4) {
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                data[i] = data[i + 1] = data[i + 2] = avg;
+            }
+            break;
 
-            switch (filterName) {
-                case 'grayscale':
-                    const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-                    data[i] = gray;
-                    data[i + 1] = gray;
-                    data[i + 2] = gray;
-                    break;
-                case 'negative':
-                    data[i] = 255 - r;
-                    data[i + 1] = 255 - g;
-                    data[i + 2] = 255 - b;
-                    break;
-                case 'brightness':
-                    const factor = 1.3; 
-                    data[i] = Math.min(255, r * factor);
-                    data[i + 1] = Math.min(255, g * factor);
-                    data[i + 2] = Math.min(255, b * factor);
-                    break;
-                }
-        }
-        ctx.putImageData(imageData, 0, 0);
+        case "brightness":
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = Math.min(255, data[i] * 1.3);
+                data[i + 1] = Math.min(255, data[i + 1] * 1.3);
+                data[i + 2] = Math.min(255, data[i + 2] * 1.3);
+            }
+            break;
+
+        case "negative":
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = 255 - data[i];
+                data[i + 1] = 255 - data[i + 1];
+                data[i + 2] = 255 - data[i + 2];
+            }
+            break;
     }
+    ctx.putImageData(imageData, piece.x, piece.y);
+}
+
     // ==============================
     // TEMPORIZADOR
     // ==============================
@@ -299,6 +306,7 @@ function loseLevel() {
     nextLevelButton.textContent = "Reintentar Nivel";
     nextLevelButton.onclick = () => {
         postGameOptions.style.display = 'none';
+        helpUsedThisLevel = false;
         gameControls.classList.add('hidden');
         startGame(currentLevel);
     };
