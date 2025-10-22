@@ -699,7 +699,6 @@ section h2 {
   transition: all 0.3s ease;
 }
 
-
 .play-btn {
   margin-top: 5px;
   display: inline-block;
@@ -882,18 +881,34 @@ section h2 {
 .comment-form{
   width: 960px;
   padding: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-content: space-between;
+}
+
+.comment-form button{
+  background-color: var(--primary1);
+  color: var(--accent1);
+  align-self: self-end;
+  width: 80px;
+  height: 25px;
+  border-radius: 5px;
+  border: 0;
 }
 
 .comment-form textarea{
   width: 100%;
-  height: 100%;
+  height: 70%;
   padding: 5px;
   box-sizing: border-box;
   resize: none;
   background-color:#2d2929;
+  border-radius: 5px;
   color: #FFFEFE;
 
 }
+
 
 .comment-more{
   width: 100%;
