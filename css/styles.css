@@ -895,6 +895,7 @@ section h2 {
   height: 25px;
   border-radius: 5px;
   border: 0;
+  cursor: pointer;
 }
 
 .comment-form textarea{
@@ -946,9 +947,22 @@ section h2 {
 
 .footer-column h3 {
   color: var(--terciary1);
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   margin-bottom: 15px;
   font-weight: 600;
+  position: relative;
+  display: inline-block;
+}
+
+.footer-column h3::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;     /* distancia entre el texto y la línea */
+  left: 0;
+  width: 40px;      /* largo de la línea */
+  height: 3px;      /* grosor */
+  background-color: var(--primary1); /* color magenta */
+  border-radius: 2px;
 }
 
 .footer-column ul {
