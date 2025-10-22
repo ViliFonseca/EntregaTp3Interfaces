@@ -1,6 +1,6 @@
 // Simulación de carga de 5 segundos con porcentaje y animación
 (function () {
-  const DURATION = 5000;  // tiempo total en ms
+  const DURATION = 1000;  // tiempo total en ms
   const INTERVAL = 50;    // ms: frecuencia de actualización
   const steps = Math.ceil(DURATION / INTERVAL);
 

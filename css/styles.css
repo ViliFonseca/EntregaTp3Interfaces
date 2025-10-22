@@ -688,18 +688,43 @@ section h2 {
 
 .game-play-button{
   display: flex;
-  text-align: center;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 180px;
   height: 118px;
-  background-color: #2D2929;
-  border: 2px solid #6A6161;
+  background: var(--secondary1);
+  border: 2px solid var(--terciary1);
   border-radius: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
+
+
+.play-btn {
+  margin-top: 5px;
+  display: inline-block;
+  animation: pulse 2s infinite ease-in-out;
+  transform-origin: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.play-btn:hover {
+  transform: scale(1.2);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
+}
+
+
 
 .game-show{
   position: absolute;
@@ -712,16 +737,6 @@ section h2 {
   align-items: center;
   background: #000;
   z-index: 1;
-}
-
-.game-play-button{
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1); 
-}
-
-.game-play-button a{
-  margin-bottom: 13px;
-  padding: 0;
 }
 
 .game-info-icons{
