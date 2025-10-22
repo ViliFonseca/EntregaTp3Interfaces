@@ -591,6 +591,10 @@ section h2 {
   gap: 5px;
  }
 
+.breadcrumb a:hover{
+  color: var(--primary5)
+ }
+
 .game-placeholder{
   max-width: 1080px;
   max-height: 657px;
