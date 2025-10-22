@@ -822,7 +822,7 @@ section h2 {
 .comments-section{
   color: var(--terciary5);
   width: 1080px;
-  height: 800px;  
+  height: auto;  
 }
 
 .comment-header{
@@ -922,101 +922,79 @@ section h2 {
 /* ================================
    FOOTER
 =================================== */
-footer {
-  margin-left: 60px;
-  background: var(--secondary1);
-  color: var(--terciary4);
+.footer {
+  background-color: var(--secondary1);
+  color: #bfb8c9;
+  padding-top: 40px;
+  padding-bottom: 20px;
+  padding-left: 140px;
+  padding-right: 18px;
 }
 
 .footer-container {
-  max-width: auto;
-  margin: 0 auto;
-  padding: 40px clamp(16px, 6vw, 100px);
   display: flex;
-  flex-direction: column;
-  gap: 40px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding-top: 20px;
 }
 
-.footer-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 40px;
+.footer-column {
+  flex: 1;
+  min-width: 220px;
+  margin: 10px 20px;
 }
 
-.footer-col {
-  display: flex;
-  flex-direction: column;
-}
-
-.footer-desc {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--terciary4);
-}
-
-.footer-heading {
-  font-size: 16px;
+.footer-column h3 {
+  color: var(--terciary1);
+  font-size: 1.1rem;
+  margin-bottom: 15px;
   font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--terciary5);
 }
 
-.footer-line {
-  width: 35px;
-  height: 2px;
-  background: var(--primary1);
-  margin-bottom: 16px;
-}
-
-.footer-links {
+.footer-column ul {
   list-style: none;
   padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 10px;
-  font-size: 13px;
 }
 
-.footer-links li a {
+.footer-column ul li {
+  margin-bottom: 10px;
+}
+
+.footer-column ul li a {
+  color: var(--terciary1);
   text-decoration: none;
-  color: #ccc;
-  transition: color 0.2s ease;
+  font-size: 0.95rem;
+  transition: color 0.3s ease;
 }
 
-.footer-links li a:hover {
-  color: var(--terciary5);
+.footer-column ul li a:hover {
+  color: var(--primary5);
 }
 
-.footer-socials {
-  display: flex;
-  gap: 14px;
-  margin-top: 8px;
+.social-icons {
+  margin-top: 15px;
 }
 
-.social-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.1);
-  display: grid;
-  place-items: center;
-  font-size: 18px;
-  color: var(--terciary5);
-  transition: background 0.2s ease, transform 0.2s ease;
+.social-icons a {
+  color: #d2d2d2;
+  margin-right: 10px;
+  font-size: 1.2rem;
+  transition: color 0.3s ease, transform 0.3s ease;
 }
 
-.social-icon:hover {
-  background: var(--primary1);
-  transform: translateY(-3px);
+.social-icons a:hover {
+  color: #b47cc7;
+  transform: scale(1.2);
 }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 16px;
   text-align: center;
-  font-size: 12px;
-  color: var(--terciary3);
+  margin-top: 20px;
+  padding-top: 10px;
+  font-size: 0.9rem;
+  color: #9a9a9a;
 }
+
 
 /* =========================================
    MENÚ DEL USUARIO
