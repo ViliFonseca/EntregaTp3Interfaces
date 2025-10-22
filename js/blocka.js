@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playGameButton = document.getElementById('playGameButton');
     const ingameUIOverlay = document.querySelector('.ingame-ui-overlay');
     const gameScreen = document.querySelector('.blocka-game-screen');
+    const helpButton = document.getElementById('helpButton');
 
     // ==============================
     // 🔹 CONFIGURACIÓN DEL JUEGO
@@ -30,14 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
         'img/Blocka/foto1.jpg',
         'img/Blocka/foto2.jpg',
         'img/Blocka/foto3.jpg',
-        
+        'img/Blocka/foto4.jpg',
+        'img/Blocka/foto5.jpg',
     ];
 
     const LEVELS = [
-        { level: 1, filter: 'null',  rows: 2, cols: 2 }, 
-        { level: 2, filter: 'brightness',  rows: 3, cols: 3 }, 
-        { level: 3, filter: 'grayscale', rows: 4, cols: 4 }, 
-        { level: 4, filter: 'negative',   rows: 5, cols: 5 }
+        { level: 1, filter:  null, rows: 2, cols: 2, maxTime: 2 }, 
+        { level: 2, filter: 'brightness', rows: 3, cols: 3 , maxTime: 9999999999}, 
+        { level: 3, filter: 'grayscale',  rows: 4, cols: 4, maxTime: 120}, 
+        { level: 4, filter: 'negative',   rows: 5, cols: 5, maxTime: 60}
     ];
 
     let currentLevel = 1;
@@ -46,67 +48,77 @@ document.addEventListener('DOMContentLoaded', () => {
     let seconds = 0;
     let timerInterval = null;
     let isGameActive = false;
+    let helpUsedThisLevel = false; 
+
+
+
 
     // ==============================
     //  FUNCIONES DEL JUEGO
     // ==============================
-function startGame(level) {
-    const config = LEVELS.find(l => l.level === level);
-    if (!config) {
-        winGame();
-        return;
-    }
-
-    isGameActive = true;
-    gameControls.classList.add('hidden');
-    postGameOptions.style.display = 'none';
-    canvas.style.display = 'block';
-    ingameUIOverlay.style.display = 'block';
-    gameScreen.classList.add('game-active-bg');
-    loadImageAndStart(config);
-}
-
-   function loadImageAndStart(config) {
-    const randomIndex = Math.floor(Math.random() * IMAGE_BANK.length);
-    const imageUrl = IMAGE_BANK[randomIndex];
-
-    const img = new Image();
-    img.crossOrigin = "Anonymous"; 
-    img.onload = () => {
-        image = img; 
-        preparePieces();
-        draw(config.filter);
-        startTimer();
-    };
-
-    // Es una buena práctica manejar también los errores de carga
-    img.onerror = () => {
-        console.error(`No se pudo cargar la imagen: ${imageUrl}`);
-        alert("Hubo un error al cargar la imagen del nivel. Por favor, intenta de nuevo.");
-    };
-    img.src = imageUrl;
-}
-
-    function draw(filter = null) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        pieces.forEach(piece => {
-            ctx.save();
-            ctx.translate(piece.dx + piece.dw / 2, piece.dy + piece.dh / 2);
-            ctx.rotate((piece.rotation * Math.PI) / 180);
-            ctx.drawImage(
-                image,
-                piece.sx, piece.sy, piece.sw, piece.sh,
-                -piece.dw / 2, -piece.dh / 2, piece.dw, piece.dh
-            );
-            ctx.restore();
-        });
-
-        if (filter && isGameActive) {
-            applyFilter(filter);
+    function startGame(level) {
+        const config = LEVELS.find(l => l.level === level);
+        if (!config) {
+            winGame();
+            return;
         }
+
+
+
+        isGameActive = true;
+        helpUsedThisLevel = false; 
+        helpButton.style.display = 'block'; 
+        gameControls.classList.add('hidden');
+        postGameOptions.style.display = 'none';
+        canvas.style.display = 'block';
+        ingameUIOverlay.style.display = 'block';
+        gameScreen.classList.add('game-active-bg');
+        loadImageAndStart(config);
     }
 
-    function preparePieces() {
+    function loadImageAndStart(config) {
+        const randomIndex = Math.floor(Math.random() * IMAGE_BANK.length);
+        const imageUrl = IMAGE_BANK[randomIndex];
+
+        const img = new Image();
+        img.onload = () => {
+            image = img; 
+            preparePieces();
+            draw(config.filter);
+            startTimer();
+        };
+        img.src = imageUrl;
+    }
+
+   function draw(filter = null) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(piece => {
+        ctx.save();
+        ctx.translate(piece.dx + piece.dw / 2, piece.dy + piece.dh / 2);
+        ctx.rotate((piece.rotation * Math.PI) / 180);
+        ctx.drawImage(
+            image,
+            piece.sx, piece.sy, piece.sw, piece.sh,
+            -piece.dw / 2, -piece.dh / 2, piece.dw, piece.dh
+        );
+        ctx.restore();
+    });
+    if (filter && isGameActive) {
+        applyFilter(filter);
+    }
+    pieces.forEach(piece => {
+        if (piece.isLocked) {
+            ctx.strokeStyle = 'gold';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(piece.dx + 2, piece.dy + 2, piece.dw - 4, piece.dh - 4);
+        }
+    });
+}
+   
+
+
+
+function preparePieces() {
         pieces = [];
         const config = LEVELS.find(l => l.level === currentLevel);
         const { rows, cols } = config;
@@ -129,8 +141,9 @@ function startGame(level) {
                     dy: row * pieceHeight,
                     dw: pieceWidth,
                     dh: pieceHeight,
-                    rotation
-                });
+                    rotation,
+                    isLocked: false
+                    });
             }
         }
     }
@@ -143,7 +156,7 @@ function startGame(level) {
             y >= p.dy && y < p.dy + p.dh
         );
 
-        if (!piece) return;
+        if (!piece ||piece.isLocked) return;
 
         const config = LEVELS.find(l => l.level === currentLevel);
         piece.rotation = (piece.rotation + direction + 360) % 360;
@@ -154,43 +167,61 @@ function startGame(level) {
     function checkWin() {
        const allCorrect = pieces.every(p => p.rotation === 0);
 
-    if (allCorrect) {
-        isGameActive = false;
-        stopTimer();
-        ingameUIOverlay.style.display = 'none';
-        draw();
-        
-        setTimeout(() => {
+        if (allCorrect) {
+            isGameActive = false;
+            stopTimer();
+            ingameUIOverlay.style.display = 'none';
+            helpButton.style.display = 'none';
+            pieces.forEach(p => p.isLocked = false); // Limpia foto al final
+            draw();
             
-           gameMessage.textContent = `¡Nivel ${currentLevel} Superado!`;
-            gameSubmessage.textContent = `Tu tiempo: ${timerDisplay.textContent}`;
+            setTimeout(() => {
+               gameMessage.textContent = `¡Nivel ${currentLevel} Superado!`;
+                gameSubmessage.textContent = `Tu tiempo: ${timerDisplay.textContent}`;
+                startButton.style.display = 'none';
+                gameControls.classList.remove('hidden');
+                postGameOptions.style.display = 'flex';
+                postGameOptions.style.flexDirection = 'column';
+                currentLevel++;
+                if (currentLevel > LEVELS.length) {
+                    nextLevelButton.textContent = "Jugar de Nuevo";
+                } else {
+                        nextLevelButton.textContent = `Siguiente Nivel (${currentLevel})`;
+                }
+            }, 500);
+        }
+    }
+   function winGame() {
+        gameScreen.classList.remove('game-active-bg');
+        canvas.style.display = 'none';
+        helpButton.style.display = 'none';
+        ingameUIOverlay.style.display = 'none';
+        startButton.style.display = 'none'; 
+        gameMessage.textContent = "¡Felicidades, has completado el juego!";
+        gameSubmessage.textContent = "¡Gracias por jugar!";
+        gameControls.classList.remove('hidden');
+        postGameOptions.style.display = 'flex';
+        nextLevelButton.textContent = "Jugar de Nuevo";
+        currentLevel = 1;
+    }
 
-            startButton.style.display = 'none';
-            gameControls.classList.remove('hidden');
-            postGameOptions.style.display = 'flex';
-            postGameOptions.style.flexDirection = 'column';
-            currentLevel++;
-            if (currentLevel > LEVELS.length) {
-                nextLevelButton.textContent = "Jugar de Nuevo";
-            } else {
-                nextLevelButton.textContent = `Siguiente Nivel (${currentLevel})`;
-            }
-        }, 500);
+    function useHelp() {
+        if (!isGameActive || helpUsedThisLevel) return; 
+
+        const incorrectPieces = pieces.filter(p => p.rotation !== 0); // Piezas incorrectas
+        if (incorrectPieces.length > 0) {
+            helpUsedThisLevel = true;
+            helpButton.style.display = 'none'; 
+            const pieceToFix = incorrectPieces[Math.floor(Math.random() * incorrectPieces.length)]; // Elige una pieza incorrecta aleatoria
+            pieceToFix.rotation = 0; // Arreglar la pieza
+            pieceToFix.isLocked = true;
+            seconds += 5;
+            const config = LEVELS.find(l => l.level === currentLevel); 
+            draw(config.filter);
+            checkWin();
         }
     }
 
-   function winGame() {
-    gameScreen.classList.remove('game-active-bg');
-    canvas.style.display = 'none';
-    ingameUIOverlay.style.display = 'none';
-    startButton.style.display = 'none'; 
-    gameMessage.textContent = "¡Felicidades, has completado el juego!";
-    gameSubmessage.textContent = "¡Gracias por jugar!";
-    gameControls.classList.remove('hidden');
-    postGameOptions.style.display = 'flex';
-    nextLevelButton.textContent = "Jugar de Nuevo";
-    currentLevel = 1;
-}
     //    FILTROS
     // ============
     function applyFilter(filterName) {
@@ -227,17 +258,51 @@ function startGame(level) {
     // ==============================
     // TEMPORIZADOR
     // ==============================
-    function startTimer() {
-        stopTimer();
-        seconds = 0;
-        timerDisplay.textContent = "00:00";
-        timerInterval = setInterval(() => {
-            seconds++;
-            const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
-            const segsRest = (seconds % 60).toString().padStart(2, '0');
-            timerDisplay.textContent = `${minutes}:${segsRest}`;
-        }, 1000);
-    }
+   function startTimer() {
+    stopTimer();
+    seconds = 0;
+    timerDisplay.textContent = "00:00";
+
+    const config = LEVELS.find(l => l.level === currentLevel);
+    const maxTime = config.maxTime || 9999;
+
+    timerInterval = setInterval(() => {
+        seconds++;
+
+        const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const segsRest = (seconds % 60).toString().padStart(2, '0');
+        timerDisplay.textContent = `${minutes}:${segsRest}`;
+        if (seconds >= maxTime && isGameActive) {
+            loseLevel();
+        }
+
+        if( maxTime - seconds <= 30){
+            timerDisplay.style.color = 'red';
+        } else {
+            timerDisplay.style.color = 'white';
+        }
+
+    }, 1000);
+}
+
+
+function loseLevel() {
+    isGameActive = false;
+    stopTimer();
+    ingameUIOverlay.style.display = 'none';
+    helpButton.style.display = 'none';
+    gameMessage.textContent = ' Has perdido';
+    gameSubmessage.textContent = `No lograste completar el nivel en el tiempo solicitado.`;
+    gameControls.classList.remove('hidden');
+    postGameOptions.style.display = 'flex';
+    postGameOptions.style.flexDirection = 'column';
+    nextLevelButton.textContent = "Reintentar Nivel";
+    nextLevelButton.onclick = () => {
+        postGameOptions.style.display = 'none';
+        gameControls.classList.add('hidden');
+        startGame(currentLevel);
+    };
+}
 
     function stopTimer() {
         clearInterval(timerInterval);
@@ -261,6 +326,7 @@ function startGame(level) {
         gameControls.classList.add('hidden');
         startGame(currentLevel);
     });
+    helpButton.addEventListener('click', useHelp);
 
     canvas.addEventListener('click', (e) => {
         const rect = canvas.getBoundingClientRect();
