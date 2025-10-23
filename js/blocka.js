@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ==============================
-    // 🔹 ELEMENTOS DEL DOM
+    // ELEMENTOS DEL DOM
     // ==============================
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const helpButton = document.getElementById('helpButton');
 
     // ==============================
-    // 🔹 CONFIGURACIÓN DEL JUEGO
+    // CONFIGURACIÓN DEL JUEGO
     // ==============================
     const IMAGE_BANK = [
         'img/Blocka/foto1.jpg',
@@ -33,13 +33,14 @@ document.addEventListener('DOMContentLoaded', () => {
         'img/Blocka/foto3.jpg',
         'img/Blocka/foto4.jpg',
         'img/Blocka/foto5.jpg',
+        'img/Blocka/foto6.jpg',
     ];
 
     const LEVELS = [
-        { level: 1, filter:  null, rows: 2, cols: 2, maxTime: 100000 }, 
-         { level: 2, filter:  'brigthness' , rows: 2, cols: 2, maxTime: 100000 }, 
-          { level: 3, filter:  "grayscale", rows: 2, cols: 2, maxTime: 90 }, 
-           { level: 4, filter:  'negative', rows: 2, cols: 2, maxTime: 60 }, 
+        { level: 1, filter:   "grayscale", rows: 2, cols: 2, maxTime: 100000 }, 
+         { level: 2, filter:  'brightness' , rows: 4, cols: 4, maxTime: 100000 }, 
+        { level: 3, filter:  "grayscale", rows: 6, cols: 6, maxTime: 120 }, 
+        { level: 4, filter:  'negative', rows: 8, cols: 8, maxTime: 60 }, 
     ];
 
     let currentLevel = 1;
@@ -56,15 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==============================
     //  FUNCIONES DEL JUEGO
     // ==============================
-    function startGame(level) {
+function startGame(level) {
         const config = LEVELS.find(l => l.level === level);
         if (!config) {
             winGame();
             return;
         }
-
-
-
         isGameActive = true;
         helpUsedThisLevel = false; 
         helpButton.style.display = 'block'; 
@@ -76,10 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
         loadImageAndStart(config);
     }
 
-   function loadImageAndStart(config) {
+function loadImageAndStart(config) {
         const randomIndex = Math.floor(Math.random() * IMAGE_BANK.length);
         const imageUrl = IMAGE_BANK[randomIndex];
-
         const img = new Image();
         img.onload = () => {
             image = img; 
@@ -90,13 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
         img.src = imageUrl;
     }
 
-   function draw() {
+function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (!isGameActive && image) { 
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
             return;
         }
-
         pieces.forEach(piece => {
             ctx.save();
             ctx.translate(piece.x + piece.width / 2, piece.y + piece.height / 2);
@@ -106,16 +102,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 piece.sx, piece.sy, piece.sw, piece.sh,
                 -piece.width / 2, -piece.height / 2, piece.width, piece.height
             );
-
             ctx.restore();
+            
             applyFilter(piece.filter, piece);
+            
         });
-    }
-
+        pieces.forEach(piece => {
+            if (piece.isHelped) {
+                ctx.strokeStyle = 'yellow';
+                ctx.lineWidth = 5;
+                ctx.strokeRect(piece.x, piece.y, piece.width, piece.height);
+            }
+    });
+}
    
-
-
-
 function preparePieces(img, rows, cols) {
     const pieceWidth = canvas.width / cols;
     const pieceHeight = canvas.height / rows;
@@ -127,7 +127,6 @@ function preparePieces(img, rows, cols) {
             const rotation = [0, 90, 180, 270][Math.floor(Math.random() * 4)];
             const x = col * pieceWidth;
             const y = row * pieceHeight;
-
             // asignar filtro
             let filter = "none";
             if (currentLevel >= 4) {
@@ -136,7 +135,6 @@ function preparePieces(img, rows, cols) {
                 const levelConfig = LEVELS.find(l => l.level === currentLevel);
                 filter = levelConfig.filter || "none";
             }
-
             pieces.push({
                 x: x,
                 y: y,
@@ -147,13 +145,14 @@ function preparePieces(img, rows, cols) {
                 sw: img.width / cols,
                 sh: img.height / rows,
                 rotation: rotation,
-                filter: filter
+                filter: filter,
+                isHelped: false,
             });
         }
     }
 }
 
-  function rotatePiece(x, y, direction) {
+function rotatePiece(x, y, direction) {
     if (!isGameActive) return;
     const piece = pieces.find(p => 
         x >= p.x && x < p.x + p.width &&
@@ -168,7 +167,7 @@ function preparePieces(img, rows, cols) {
     checkWin();
 }
 
-    function checkWin() {
+function checkWin() {
        const allCorrect = pieces.every(p => p.rotation === 0);
 
         if (allCorrect) {
@@ -197,7 +196,10 @@ function preparePieces(img, rows, cols) {
             }, 500);
         }
     }
-   function winGame() {
+    
+
+
+function winGame() {
         gameScreen.classList.remove('game-active-bg');
         canvas.style.display = 'none';
         helpButton.style.display = 'none';
@@ -211,7 +213,28 @@ function preparePieces(img, rows, cols) {
         currentLevel = 1;
     }
 
-    function useHelp() {
+function loseLevel() {
+    isGameActive = false;
+    stopTimer();
+    ingameUIOverlay.style.display = 'none';
+    helpButton.style.display = 'none';
+    gameMessage.textContent = ' Has perdido';
+    gameSubmessage.textContent = `No lograste completar el nivel en el tiempo solicitado.`;
+    gameControls.classList.remove('hidden');
+    postGameOptions.style.display = 'flex';
+    postGameOptions.style.flexDirection = 'column';
+    nextLevelButton.textContent = "Reintentar Nivel";
+    nextLevelButton.onclick = () => {
+        postGameOptions.style.display = 'none';
+        helpUsedThisLevel = false;
+        gameControls.classList.add('hidden');
+        startGame(currentLevel);
+    };
+}
+
+
+
+function useHelp() {
         if (!isGameActive || helpUsedThisLevel) return; 
 
         const incorrectPieces = pieces.filter(p => p.rotation !== 0); // Piezas incorrectas
@@ -221,6 +244,7 @@ function preparePieces(img, rows, cols) {
             const pieceToFix = incorrectPieces[Math.floor(Math.random() * incorrectPieces.length)]; // Elige una pieza incorrecta aleatoria
             pieceToFix.rotation = 0; // Arreglar la pieza
             pieceToFix.isLocked = true;
+            pieceToFix.isHelped = true;
             seconds += 5;
             const config = LEVELS.find(l => l.level === currentLevel); 
             draw(config.filter);
@@ -228,9 +252,9 @@ function preparePieces(img, rows, cols) {
         }
     }
 
-    //    FILTROS
+    // FILTROS
     // ============
-    function applyFilter(filterType, piece) {
+function applyFilter(filterType, piece) {
     if (filterType === "none") return;
     const imageData = ctx.getImageData(piece.x, piece.y, piece.width, piece.height);
     const data = imageData.data;
@@ -239,15 +263,18 @@ function preparePieces(img, rows, cols) {
         case "grayscale":
             for (let i = 0; i < data.length; i += 4) {
                 const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                data[i] = data[i + 1] = data[i + 2] = avg;
+                data[i] = avg;
+                data[i + 1] = avg;
+                data[i + 2] = avg;
             }
             break;
 
         case "brightness":
+            const brillo = 1.3;
             for (let i = 0; i < data.length; i += 4) {
-                data[i] = Math.min(255, data[i] * 1.3);
-                data[i + 1] = Math.min(255, data[i + 1] * 1.3);
-                data[i + 2] = Math.min(255, data[i + 2] * 1.3);
+                data[i] = Math.min(255, data[i] * brillo);
+                data[i + 1] = Math.min(255, data[i + 1] * brillo);
+                data[i + 2] = Math.min(255, data[i + 2] * brillo);
             }
             break;
 
@@ -265,7 +292,7 @@ function preparePieces(img, rows, cols) {
     // ==============================
     // TEMPORIZADOR
     // ==============================
-   function startTimer() {
+function startTimer() {
     stopTimer();
     seconds = 0;
     timerDisplay.textContent = "00:00";
@@ -292,27 +319,7 @@ function preparePieces(img, rows, cols) {
     }, 1000);
 }
 
-
-function loseLevel() {
-    isGameActive = false;
-    stopTimer();
-    ingameUIOverlay.style.display = 'none';
-    helpButton.style.display = 'none';
-    gameMessage.textContent = ' Has perdido';
-    gameSubmessage.textContent = `No lograste completar el nivel en el tiempo solicitado.`;
-    gameControls.classList.remove('hidden');
-    postGameOptions.style.display = 'flex';
-    postGameOptions.style.flexDirection = 'column';
-    nextLevelButton.textContent = "Reintentar Nivel";
-    nextLevelButton.onclick = () => {
-        postGameOptions.style.display = 'none';
-        helpUsedThisLevel = false;
-        gameControls.classList.add('hidden');
-        startGame(currentLevel);
-    };
-}
-
-    function stopTimer() {
+function stopTimer() {
         clearInterval(timerInterval);
     }
 
