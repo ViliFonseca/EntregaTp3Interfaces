@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     const LEVELS = [
-        { level: 1, filter:   "grayscale", rows: 2, cols: 2, maxTime: 100000 }, 
+        { level: 1, filter:   null , rows: 2, cols: 2, maxTime: 100000 }, 
          { level: 2, filter:  'brightness' , rows: 4, cols: 4, maxTime: 100000 }, 
         { level: 3, filter:  "grayscale", rows: 6, cols: 6, maxTime: 120 }, 
         { level: 4, filter:  'negative', rows: 8, cols: 8, maxTime: 60 }, 
@@ -373,4 +373,5 @@ function stopTimer() {
             instructionsModal.style.display = 'none';
         }
     });
+
 });
